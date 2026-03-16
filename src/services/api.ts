@@ -30,6 +30,38 @@ export interface Proveedor {
   activo: boolean;
 }
 
+export interface UnidadMedida {
+  id_unidad_medida: number;
+  nombre: string;
+  abreviatura: string;
+  activo: boolean;
+}
+
+export interface CategoriaProducto {
+  id_categoria: number;
+  nombre: string;
+  descripcion?: string | null;
+  activo: boolean;
+}
+
+export interface Producto {
+  id_producto: number;
+  codigo_barra?: string | null;
+  nombre: string;
+  descripcion?: string | null;
+  // Category is now a FK
+  id_categoria?: number | null;
+  categoria?: CategoriaProducto | null;
+  // Unit is now a FK
+  id_unidad_medida?: number | null;
+  unidad_medida?: UnidadMedida | null;
+  id_moneda_precio?: number | null;
+  peso_unitario?: number | null;
+  activo: boolean;
+  inventario_general?: number | { cantidad_actual: number } | null;
+  inventario_legal?: number | { cantidad_actual: number } | null;
+}
+
 export interface User {
   id: number;
   nombre: string;
@@ -187,7 +219,7 @@ class ApiService {
     const body = await response.json();
 
     if (!response.ok) {
-        throw new Error(body.message || body.mensaje || 'Error al obtener proveedores');
+      throw new Error(body.message || body.mensaje || 'Error al obtener proveedores');
     }
 
     // Handle generic backend pagination wrapper { status: 'success', data: [...], meta: { ... } }
@@ -258,6 +290,111 @@ class ApiService {
     if (!response.ok) {
       throw new Error(body.message || body.mensaje || 'Error al desactivar proveedor');
     }
+  }
+
+  async getProductos(page = 1, limit = 10, search = '', soloActivos = false): Promise<PaginatedResponse<Producto>> {
+    const query = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      soloActivos: soloActivos.toString(),
+      ...(search && { search })
+    });
+
+    const response = await fetch(`${API_URL}/inventario/productos?${query}`, {
+      headers: this.getHeaders(true),
+    });
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      throw new Error(body.message || body.mensaje || 'Error al obtener productos');
+    }
+
+    return {
+      data: body.data,
+      meta: {
+        total: body.meta?.total || body.data.length,
+        page: body.meta?.page || 1,
+        totalPages: body.meta?.totalPages || 1
+      }
+    };
+  }
+
+  async getProducto(id: number): Promise<Producto> {
+    const response = await fetch(`${API_URL}/inventario/productos/${id}`, {
+      headers: this.getHeaders(true),
+    });
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      throw new Error(body.message || body.mensaje || 'Error al obtener producto');
+    }
+
+    return body.data;
+  }
+
+  async createProducto(data: Omit<Producto, 'id_producto' | 'activo'>): Promise<Producto> {
+    const response = await fetch(`${API_URL}/inventario/productos`, {
+      method: 'POST',
+      headers: this.getHeaders(true),
+      body: JSON.stringify(data),
+    });
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      throw new Error(body.message || body.mensaje || 'Error al crear producto');
+    }
+
+    return body.data;
+  }
+
+  async updateProducto(id: number, data: Partial<Producto>): Promise<Producto> {
+    const response = await fetch(`${API_URL}/inventario/productos/${id}`, {
+      method: 'PUT',
+      headers: this.getHeaders(true),
+      body: JSON.stringify(data),
+    });
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      throw new Error(body.message || body.mensaje || 'Error al actualizar producto');
+    }
+
+    return body.data;
+  }
+
+  async deleteProducto(id: number): Promise<void> {
+    const response = await fetch(`${API_URL}/inventario/productos/${id}`, {
+      method: 'DELETE',
+      headers: this.getHeaders(true),
+    });
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      throw new Error(body.message || body.mensaje || 'Error al desactivar producto');
+    }
+  }
+
+  async getCategorias(): Promise<CategoriaProducto[]> {
+    const response = await fetch(`${API_URL}/inventario/categorias`, {
+      headers: this.getHeaders(true),
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.message || 'Error al obtener categorías');
+    return body.data || [];
+  }
+
+  async getUnidadesMedida(): Promise<UnidadMedida[]> {
+    const response = await fetch(`${API_URL}/inventario/unidades-medida`, {
+      headers: this.getHeaders(true),
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.message || 'Error al obtener unidades de medida');
+    return body.data || [];
   }
 }
 

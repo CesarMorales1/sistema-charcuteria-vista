@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Usuarios from './pages/Usuarios';
 import Permisos from './pages/Permisos';
 import Proveedores from './pages/Proveedores';
+import Productos from './pages/Productos';
 
 function App() {
   return (
@@ -39,6 +40,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+            <Route
+              path="/productos"
+              element={
+                <ProtectedRoute>
+                  <Productos />
+                </ProtectedRoute>
+              }
+            />
           <Route
             path="/proveedores"
             element={
