@@ -8,6 +8,11 @@ import Usuarios from './pages/Usuarios';
 import Permisos from './pages/Permisos';
 import Proveedores from './pages/Proveedores';
 import Productos from './pages/Productos';
+import Compras from './pages/Compras';
+import Inventario from './pages/Inventario';
+import Ventas from './pages/Ventas';
+import Pos from './pages/Pos';
+
 
 function App() {
   return (
@@ -40,19 +45,51 @@ function App() {
               </ProtectedRoute>
             }
           />
-            <Route
-              path="/productos"
-              element={
-                <ProtectedRoute>
-                  <Productos />
-                </ProtectedRoute>
-              }
-            />
+          <Route
+            path="/productos"
+            element={
+              <ProtectedRoute>
+                <Productos />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/proveedores"
             element={
               <ProtectedRoute>
                 <Proveedores />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/compras"
+            element={
+              <ProtectedRoute>
+                <Compras />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ventas"
+            element={
+              <ProtectedRoute>
+                <Ventas />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pos"
+            element={
+              <ProtectedRoute>
+                <Pos />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventario"
+            element={
+              <ProtectedRoute>
+                <Inventario />
               </ProtectedRoute>
             }
           />

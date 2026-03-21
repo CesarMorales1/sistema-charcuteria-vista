@@ -11,6 +11,7 @@ interface ProductFormData {
   id_categoria: number | '';
   id_unidad_medida: number | '';
   peso_unitario: string;
+  precio_base: string;
 }
 
 const emptyForm = (): ProductFormData => ({
@@ -20,6 +21,7 @@ const emptyForm = (): ProductFormData => ({
   id_categoria: '',
   id_unidad_medida: '',
   peso_unitario: '',
+  precio_base: '',
 });
 
 // ----- Helper to extract stock quantity -----
@@ -119,6 +121,7 @@ export default function Productos() {
         id_categoria: typeof producto.categoria === 'object' && producto.categoria ? producto.categoria.id_categoria : (producto.id_categoria || ''),
         id_unidad_medida: typeof producto.unidad_medida === 'object' && producto.unidad_medida ? producto.unidad_medida.id_unidad_medida : (producto.id_unidad_medida || ''),
         peso_unitario: producto.peso_unitario != null ? String(producto.peso_unitario) : '',
+        precio_base: producto.precio_base != null ? String(producto.precio_base) : '',
       });
     } else {
       setEditingProducto(null);
@@ -143,6 +146,7 @@ export default function Productos() {
     if (formData.id_categoria === '' || !Number.isFinite(Number(formData.id_categoria))) errors.id_categoria = 'Selecciona una categoría válida';
     if (formData.id_unidad_medida === '' || !Number.isFinite(Number(formData.id_unidad_medida))) errors.id_unidad_medida = 'Selecciona una unidad de medida válida';
     if (formData.peso_unitario && isNaN(Number(formData.peso_unitario))) errors.peso_unitario = 'El peso debe ser un número';
+    if (formData.precio_base && isNaN(Number(formData.precio_base))) errors.precio_base = 'El precio debe ser un número';
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -171,6 +175,7 @@ export default function Productos() {
       id_categoria: idCategoria,
       id_unidad_medida: idUnidad,
       peso_unitario: formData.peso_unitario ? parseFloat(formData.peso_unitario) : undefined,
+      precio_base: formData.precio_base ? parseFloat(formData.precio_base) : undefined,
     };
 
     setIsSubmitting(true);
@@ -318,6 +323,7 @@ export default function Productos() {
                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Producto</th>
                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Categoría</th>
                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Unidad</th>
+                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Precio</th>
                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Stock G.</th>
                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Stock L.</th>
                         <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Estado</th>
@@ -343,8 +349,12 @@ export default function Productos() {
                             </span>
                           </td>
                           <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                            ${(producto.precio_base || 0).toFixed(2)}
+                          </td>
+                          <td className="px-6 py-4 text-sm font-medium text-gray-900">
                             {getStock(producto.inventario_general)}
                           </td>
+
                           <td className="px-6 py-4 text-sm font-medium text-gray-900">
                             {getStock(producto.inventario_legal)}
                           </td>
@@ -483,6 +493,21 @@ export default function Productos() {
                     className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all text-sm ${formErrors.peso_unitario ? 'border-red-300' : 'border-gray-200'}`}
                   />
                   {formErrors.peso_unitario && <p className="text-xs text-red-600 mt-1">{formErrors.peso_unitario}</p>}
+                </div>
+
+                {/* Precio Base */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-1.5">Precio de Venta (USD) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.precio_base}
+                    onChange={e => setFormData({ ...formData, precio_base: e.target.value })}
+                    placeholder="Ej: 5.50"
+                    className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all text-sm ${formErrors.precio_base ? 'border-red-300' : 'border-gray-200'}`}
+                  />
+                  {formErrors.precio_base && <p className="text-xs text-red-600 mt-1">{formErrors.precio_base}</p>}
                 </div>
 
                 {/* Categoría */}
