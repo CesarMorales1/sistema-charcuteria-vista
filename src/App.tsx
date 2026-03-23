@@ -12,7 +12,7 @@ import Compras from './pages/Compras';
 import Inventario from './pages/Inventario';
 import Ventas from './pages/Ventas';
 import Pos from './pages/Pos';
-
+import InitialInventory from './pages/InitialInventory';
 
 function App() {
   return (
@@ -90,6 +90,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Inventario />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inicializacion"
+            element={
+              <ProtectedRoute>
+                <InitialInventory />
               </ProtectedRoute>
             }
           />

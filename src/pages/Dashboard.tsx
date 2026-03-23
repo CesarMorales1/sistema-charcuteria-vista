@@ -1,5 +1,5 @@
 import { useAuth } from '../context/AuthContext';
-import { Package2, LayoutDashboard, Users, Key, Building2, ShoppingCart, Package, TrendingUp, FileText, Clock, ArrowRight, Sparkles } from 'lucide-react';
+import { Package2, LayoutDashboard, Users, Key, Building2, ShoppingCart, Package, TrendingUp, FileText, Clock, ArrowRight, Sparkles, ShoppingBag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 
@@ -14,6 +14,7 @@ export default function Dashboard() {
     { name: 'Permisos', icon: Key, color: 'bg-gradient-to-br from-amber-500 to-amber-600', iconColor: 'text-white', path: '/permisos', requiresAdmin: true, hasBadge: true, description: 'Control de accesos' },
     { name: 'Productos', icon: Package2, color: 'bg-gradient-to-br from-emerald-500 to-emerald-600', iconColor: 'text-white', path: '/productos', requiresAdmin: false, description: 'Catálogo completo' },
     { name: 'Proveedores', icon: Building2, color: 'bg-gradient-to-br from-rose-500 to-rose-600', iconColor: 'text-white', path: '/proveedores', requiresAdmin: false, description: 'Gestión de empresas' },
+    { name: 'Ventas', icon: ShoppingBag, color: 'bg-gradient-to-br from-emerald-600 to-emerald-700', iconColor: 'text-white', path: '/pos', requiresAdmin: false, description: 'Punto de venta (POS)' },
     { name: 'Compras', icon: ShoppingCart, color: 'bg-gradient-to-br from-blue-500 to-blue-600', iconColor: 'text-white', path: '/compras', requiresAdmin: false, description: 'Registro de órdenes' },
     { name: 'Inventario', icon: Package, color: 'bg-gradient-to-br from-amber-600 to-amber-700', iconColor: 'text-white', path: '/inventario', requiresAdmin: false, description: 'Control de stock' },
     { name: 'Tasas de Cambio', icon: TrendingUp, color: 'bg-gradient-to-br from-cyan-500 to-cyan-600', iconColor: 'text-white', path: '/tasas', requiresAdmin: false, description: 'Conversión de divisas' },

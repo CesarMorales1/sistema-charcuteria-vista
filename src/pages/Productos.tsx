@@ -67,13 +67,9 @@ export default function Productos() {
           api.getCategorias(),
           api.getUnidadesMedida(),
         ]);
-        if (!cats.length || !units.length) {
-          setRefsError('No se pudieron cargar las categorías o unidades de medida. Verifica la conexión con el servidor.');
-        } else {
-          setRefsError(null);
-        }
         setCategorias(cats);
         setUnidades(units);
+        setRefsError(null);
       } catch (err) {
         setRefsError('Error al cargar categorías y unidades. El formulario puede no funcionar correctamente.');
       }

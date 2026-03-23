@@ -185,6 +185,25 @@ class InventarioApiService {
 
     return data;
   }
+
+  async checkInicializacion(): Promise<boolean> {
+    const response = await fetch(`${API_URL}/inventario/inicializacion/estado`, {
+      headers: this.getHeaders(),
+    });
+    const body = await response.json();
+    if (!response.ok) return true; // Fail open to avoid blocking everything if route fails
+    return body.data?.inicializado || false;
+  }
+
+  async inicializarInventario(productos: { id_producto: number; cantidad: number; valor_unitario?: number | null }[]): Promise<void> {
+    const response = await fetch(`${API_URL}/inventario/inicializacion`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ productos }),
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.message || 'Error al inicializar inventario');
+  }
 }
 
 export const inventarioApi = new InventarioApiService();
