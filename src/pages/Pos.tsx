@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Store, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { CartProvider, useCart } from '../context/CartContext';
 import ProductSearch from '../components/ProductSearch';
@@ -42,18 +42,22 @@ function POSContent() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-7xl mx-auto h-full min-h-[600px]">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
-              <div className="lg:col-span-2 bg-white rounded-lg shadow-lg p-6 flex flex-col min-h-[500px]">
-                <h2 className="text-xl font-bold text-gray-900 mb-4 shrink-0">Productos</h2>
+        <main className="flex-1 overflow-y-auto p-6 md:p-8">
+          <div className="max-w-[1600px] mx-auto h-full min-h-[600px]">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full">
+              <div className="lg:col-span-7 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col min-h-[500px]">
+                <div className="flex items-center justify-between mb-6 shrink-0">
+                  <h2 className="text-xl font-extrabold text-gray-900 font-headline">Productos</h2>
+                </div>
                 <div className="flex-1 overflow-hidden min-h-0">
                   <ProductSearch onSelectProduct={setSelectedProduct} />
                 </div>
               </div>
-
-              <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col min-h-[500px]">
-                <h2 className="text-xl font-bold text-gray-900 mb-4 shrink-0">Carrito de Venta</h2>
+        
+              <div className="lg:col-span-5 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col min-h-[500px]">
+                <div className="flex items-center justify-between mb-6 shrink-0">
+                  <h2 className="text-xl font-extrabold text-gray-900 font-headline">Carrito de Venta</h2>
+                </div>
                 <div className="flex-1 overflow-hidden min-h-0">
                   <Cart onCheckout={() => setShowCheckout(true)} />
                 </div>

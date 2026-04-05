@@ -174,7 +174,7 @@ class InventarioApiService {
     });
     const body = await response.json();
     if (!response.ok) throw new Error(body.message || 'Error al obtener movimientos');
-    
+
     // Map backend fields to frontend names
     const data = (body.data || []).map((m: any) => ({
       ...m,

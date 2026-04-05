@@ -514,6 +514,21 @@ class ApiService {
       return 0;
     }
   }
+
+  async updateTasa(moneda_origen_id: number, tasa: number): Promise<void> {
+    const MONEDA_DESTINO_USD = 1; // USD is always the destination (base) currency
+    const response = await fetch(`${API_URL}/tasas`, {
+      method: 'POST',
+      headers: this.getHeaders(true),
+      body: JSON.stringify({ moneda_origen_id, moneda_destino_id: MONEDA_DESTINO_USD, tasa }),
+    });
+
+    const body = await response.json();
+
+    if (!response.ok) {
+      throw new Error(body.message || body.mensaje || 'Error al actualizar tasa');
+    }
+  }
 }
 
 export const api = new ApiService();

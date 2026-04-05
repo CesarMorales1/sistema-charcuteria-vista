@@ -267,8 +267,8 @@ export default function Inventario() {
                       key={key}
                       onClick={() => setFiltroInventario(key)}
                       className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${filtroInventario === key
-                          ? 'bg-blue-600 text-white shadow-sm'
-                          : 'text-gray-600 hover:text-gray-900'
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
                         }`}
                     >
                       {label}
@@ -381,8 +381,8 @@ export default function Inventario() {
                         key={n}
                         onClick={() => loadProductos(n)}
                         className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${currentPage === n
-                            ? 'bg-blue-600 text-white'
-                            : 'border border-gray-300 hover:bg-gray-50 text-gray-700'
+                          ? 'bg-blue-600 text-white'
+                          : 'border border-gray-300 hover:bg-gray-50 text-gray-700'
                           }`}
                       >
                         {n}

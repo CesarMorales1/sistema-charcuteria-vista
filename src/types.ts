@@ -23,3 +23,4 @@ export const UNIDAD_KILOGRAMOS = 'Kilogramos';
 export const IVA_ALICUOTA = 16;
 export const MONEDA_USD = 1; // ID for USD in the database
 export const MONEDA_BS = 2;  // ID for Bolivares in the database
+export const MONEDA_COP = 3; // ID for Pesos Colombianos in the database

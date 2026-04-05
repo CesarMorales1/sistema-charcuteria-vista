@@ -12,6 +12,7 @@ import Compras from './pages/Compras';
 import Inventario from './pages/Inventario';
 import Ventas from './pages/Ventas';
 import Pos from './pages/Pos';
+import Tasas from './pages/Tasas';
 import InitialInventory from './pages/InitialInventory';
 
 function App() {
@@ -82,6 +83,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Pos />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tasas"
+            element={
+              <ProtectedRoute>
+                <Tasas />
               </ProtectedRoute>
             }
           />

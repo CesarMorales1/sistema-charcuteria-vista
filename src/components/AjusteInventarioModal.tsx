@@ -126,11 +126,10 @@ export default function AjusteInventarioModal({ producto, onClose, onCompleted }
                   type="button"
                   onClick={() => setFormData({ ...formData, tipo_inventario: value })}
                   disabled={loading || success}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors border ${
-                    formData.tipo_inventario === value
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors border ${formData.tipo_inventario === value
                       ? 'bg-blue-600 text-white border-blue-600'
                       : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   {label}
                 </button>
@@ -153,11 +152,10 @@ export default function AjusteInventarioModal({ producto, onClose, onCompleted }
                   type="button"
                   onClick={() => setFormData({ ...formData, tipo_movimiento: value })}
                   disabled={loading || success}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors border ${
-                    formData.tipo_movimiento === value
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors border ${formData.tipo_movimiento === value
                       ? 'bg-blue-600 text-white border-blue-600'
                       : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   {label}
                 </button>
