@@ -5,12 +5,17 @@ import {
   Categoria,
   Movimiento,
 } from '../services/inventarioApi';
+import { api } from '../services/api';
+import { MONEDA_BS, MONEDA_COP } from '../types';
 import Sidebar from '../components/Sidebar';
 import ProductoModal from '../components/ProductoModal';
 import AjusteInventarioModal from '../components/AjusteInventarioModal';
 import { Package, Search, RefreshCw, History, X, AlertCircle, Loader, AlertTriangle, ArrowUpDown, Plus, CreditCard as Edit2 } from 'lucide-react';
 
 const fmt3 = (n: number | undefined | null) => (Number(n) || 0).toFixed(3);
+const fmtUSD = (n: number | undefined | null) => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtBSF = (n: number | undefined | null) => (Number(n) || 0).toLocaleString('es-VE', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const fmtCOP = (n: number | undefined | null) => (Number(n) || 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 const STOCK_BAJO = 5;
 
 type FiltroInventario = 'todos' | 'general' | 'legal';
@@ -30,6 +35,7 @@ export default function Inventario() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [globalStats, setGlobalStats] = useState({ totalStockBajo: 0, totalDiferencias: 0 });
+  const [tasas, setTasas] = useState({ ves: 0, cop: 0 });
 
   const [showHistorialModal, setShowHistorialModal] = useState(false);
   const [historialProducto, setHistorialProducto] = useState<ProductoInventario | null>(null);
@@ -75,7 +81,18 @@ export default function Inventario() {
     } catch { }
   }, []);
 
+  const loadTasas = useCallback(async () => {
+    try {
+      const [ves, cop] = await Promise.all([
+        api.getTasaVigente(MONEDA_BS),
+        api.getTasaVigente(MONEDA_COP)
+      ]);
+      setTasas({ ves: ves || 0, cop: cop || 0 });
+    } catch { }
+  }, []);
+
   useEffect(() => { loadCatalogos(); }, [loadCatalogos]);
+  useEffect(() => { loadTasas(); }, [loadTasas]);
   useEffect(() => { loadProductos(1); }, [loadProductos]);
 
   const openHistorialModal = async (prod: ProductoInventario) => {
@@ -138,37 +155,46 @@ export default function Inventario() {
   const showGeneral = filtroInventario === 'todos' || filtroInventario === 'general';
   const showLegal = filtroInventario === 'todos' || filtroInventario === 'legal';
 
+  const calcularValorInventario = (stock: number, precioDolares: number) => {
+    const valorUSD = stock * precioDolares;
+    return {
+      usd: valorUSD,
+      bsf: tasas.ves > 0 ? valorUSD * tasas.ves : 0,
+      cop: tasas.cop > 0 ? valorUSD * tasas.cop : 0
+    };
+  };
+
 
 
   return (
     <div className="min-h-screen flex bg-gray-50">
       <Sidebar />
       <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white/80 backdrop-blur-sm px-8 py-5 border-b border-gray-200 sticky top-0 z-20">
+        <header className="bg-gradient-to-r from-white via-blue-50/30 to-white/80 backdrop-blur-sm px-8 py-6 border-b-2 border-gray-200 sticky top-0 z-20 shadow-sm">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Package size={20} className="text-white" />
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 ring-4 ring-blue-500/10">
+                <Package size={24} className="text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900 leading-tight">Inventario</h2>
-                <p className="text-xs text-gray-500 mt-0.5">{totalItems} productos activos</p>
+                <h2 className="text-2xl font-bold text-gray-900 leading-tight tracking-tight">Inventario</h2>
+                <p className="text-xs text-gray-600 mt-1 font-medium">{totalItems} productos activos</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => openProductoModal()}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium shadow-sm"
+                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:shadow-lg hover:shadow-blue-500/30 text-white rounded-lg transition-all text-sm font-semibold shadow-md"
               >
-                <Plus size={16} />
+                <Plus size={18} strokeWidth={2.5} />
                 Nuevo Producto
               </button>
               <button
                 onClick={() => loadProductos(currentPage)}
                 disabled={loading}
-                className="flex items-center gap-2 px-3 py-2 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg transition-colors disabled:opacity-50 text-sm font-medium text-gray-700"
+                className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 rounded-lg transition-all disabled:opacity-50 text-sm font-semibold text-gray-700 shadow-sm"
               >
-                <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
                 Recargar
               </button>
             </div>
@@ -190,14 +216,14 @@ export default function Inventario() {
                   setFiltroStockBajo(false);
                   setFiltroDiferencias(false);
                 }}
-                className={`bg-white rounded-xl border p-4 flex items-center gap-4 shadow-sm transition-all text-left ${!filtroStockBajo && !filtroDiferencias ? 'border-blue-600 ring-1 ring-blue-600' : 'border-gray-200 hover:border-blue-300'}`}
+                className={`bg-gradient-to-br rounded-xl border p-5 flex items-center gap-4 shadow-sm transition-all text-left ${!filtroStockBajo && !filtroDiferencias ? 'from-blue-50 to-blue-100/50 border-blue-300 ring-2 ring-blue-400/50 shadow-md' : 'from-white to-gray-50/50 border-gray-200 hover:border-blue-300'}`}
               >
-                <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                  <Package size={20} className="text-blue-600" />
+                <div className="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                  <Package size={24} className="text-white" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 font-medium">Total Productos</p>
-                  <p className="text-2xl font-bold text-gray-900">{totalItems}</p>
+                  <p className="text-xs text-gray-600 font-bold uppercase tracking-wider">Total Productos</p>
+                  <p className="text-3xl font-extrabold text-gray-900 mt-0.5">{totalItems}</p>
                 </div>
               </button>
 
@@ -206,14 +232,14 @@ export default function Inventario() {
                   setFiltroStockBajo(!filtroStockBajo);
                   setFiltroDiferencias(false);
                 }}
-                className={`bg-white rounded-xl border p-4 flex items-center gap-4 shadow-sm transition-all text-left ${filtroStockBajo ? 'border-red-600 ring-1 ring-red-600' : 'border-gray-200 hover:border-red-300'}`}
+                className={`bg-gradient-to-br rounded-xl border p-5 flex items-center gap-4 shadow-sm transition-all text-left ${filtroStockBajo ? 'from-red-50 to-red-100/50 border-red-300 ring-2 ring-red-400/50 shadow-md' : 'from-white to-gray-50/50 border-gray-200 hover:border-red-300'}`}
               >
-                <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
-                  <AlertTriangle size={20} className="text-red-600" />
+                <div className="w-12 h-12 rounded-lg bg-red-600 flex items-center justify-center shadow-lg shadow-red-500/30">
+                  <AlertTriangle size={24} className="text-white" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 font-medium">Stock Bajo (&lt;{STOCK_BAJO})</p>
-                  <p className="text-2xl font-bold text-red-600">{globalStats.totalStockBajo}</p>
+                  <p className="text-xs text-gray-600 font-bold uppercase tracking-wider">Stock Bajo (&lt;{STOCK_BAJO})</p>
+                  <p className="text-3xl font-extrabold text-red-600 mt-0.5">{globalStats.totalStockBajo}</p>
                 </div>
               </button>
 
@@ -222,42 +248,42 @@ export default function Inventario() {
                   setFiltroDiferencias(!filtroDiferencias);
                   setFiltroStockBajo(false);
                 }}
-                className={`bg-white rounded-xl border p-4 flex items-center gap-4 shadow-sm transition-all text-left ${filtroDiferencias ? 'border-amber-600 ring-1 ring-amber-600' : 'border-gray-200 hover:border-amber-300'}`}
+                className={`bg-gradient-to-br rounded-xl border p-5 flex items-center gap-4 shadow-sm transition-all text-left ${filtroDiferencias ? 'from-amber-50 to-amber-100/50 border-amber-300 ring-2 ring-amber-400/50 shadow-md' : 'from-white to-gray-50/50 border-gray-200 hover:border-amber-300'}`}
               >
-                <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
-                  <ArrowUpDown size={20} className="text-amber-600" />
+                <div className="w-12 h-12 rounded-lg bg-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                  <ArrowUpDown size={24} className="text-white" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 font-medium">Diferencias Gen/Legal</p>
-                  <p className="text-2xl font-bold text-amber-600">{globalStats.totalDiferencias}</p>
+                  <p className="text-xs text-gray-600 font-bold uppercase tracking-wider">Diferencias Gen/Legal</p>
+                  <p className="text-3xl font-extrabold text-amber-600 mt-0.5">{globalStats.totalDiferencias}</p>
                 </div>
               </button>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-gray-200 flex items-center justify-between gap-4 flex-wrap">
+            <div className="bg-white rounded-2xl border-2 border-gray-200 shadow-sm overflow-hidden">
+              <div className="p-5 border-b-2 border-gray-200 bg-gradient-to-r from-gray-50/50 to-white flex items-center justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div className="relative flex-1 max-w-sm">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       placeholder="Buscar por nombre o código..."
                       value={searchTerm}
                       onChange={e => setSearchTerm(e.target.value)}
-                      className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/40 transition-all text-sm bg-white text-gray-900"
+                      className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-sm bg-white text-gray-900 font-medium"
                     />
                   </div>
                   <select
                     value={filtroCategoria}
                     onChange={e => setFiltroCategoria(e.target.value ? Number(e.target.value) : '')}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                    className="px-4 py-2.5 border-2 border-gray-300 rounded-lg text-sm bg-white text-gray-900 font-medium focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
                   >
                     <option value="">Todas las categorías</option>
                     {categorias.map(c => <option key={c.id_categoria} value={c.id_categoria}>{c.nombre}</option>)}
                   </select>
                 </div>
 
-                <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                <div className="flex items-center gap-1.5 bg-gradient-to-r from-gray-100 to-gray-50 rounded-lg p-1.5 shadow-sm">
                   {([
                     { key: 'todos' as const, label: 'Todos' },
                     { key: 'general' as const, label: 'General' },
@@ -266,9 +292,9 @@ export default function Inventario() {
                     <button
                       key={key}
                       onClick={() => setFiltroInventario(key)}
-                      className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${filtroInventario === key
-                        ? 'bg-blue-600 text-white shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
+                      className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${filtroInventario === key
+                        ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
+                        : 'text-gray-700 hover:text-gray-900 hover:bg-white/60'
                         }`}
                     >
                       {label}
@@ -278,111 +304,160 @@ export default function Inventario() {
               </div>
 
               {loading ? (
-                <div className="flex items-center justify-center py-20">
-                  <Loader size={24} className="text-blue-600 animate-spin" />
+                <div className="flex items-center justify-center py-32">
+                  <div className="text-center">
+                    <Loader size={40} className="text-blue-600 animate-spin mx-auto mb-4" />
+                    <p className="text-sm font-semibold text-gray-600">Cargando productos...</p>
+                  </div>
                 </div>
               ) : productos.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20">
-                  <Package size={40} className="text-gray-300 mb-2" />
-                  <p className="text-gray-500 font-medium text-sm">No hay productos que coincidan</p>
+                <div className="flex flex-col items-center justify-center py-32">
+                  <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-50 rounded-full flex items-center justify-center mb-4 shadow-sm">
+                    <Package size={40} className="text-blue-300" />
+                  </div>
+                  <p className="text-gray-900 font-bold text-lg mb-1">No hay productos que coincidan</p>
+                  <p className="text-gray-500 text-sm mb-6">Intenta ajustar los filtros de búsqueda</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-gray-50 border-b border-gray-200">
+                    <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200 sticky top-0">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Producto</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Categoría</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Unidad</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Producto</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Categoría</th>
+                        <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Precios (USD/BSF/COP)</th>
                         {showGeneral && (
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Stock General</th>
+                          <>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider bg-blue-50/50">Stock Gral</th>
+                            <th className="px-4 py-3 text-right text-xs font-bold text-blue-700 uppercase tracking-wider bg-blue-50/50">Valor USD</th>
+                            <th className="px-4 py-3 text-right text-xs font-bold text-blue-700 uppercase tracking-wider bg-blue-50/50">Valor BSF</th>
+                            <th className="px-4 py-3 text-right text-xs font-bold text-blue-700 uppercase tracking-wider bg-blue-50/50">Valor COP</th>
+                          </>
                         )}
                         {showLegal && (
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Stock Legal</th>
+                          <>
+                            <th className="px-4 py-3 text-left text-xs font-bold text-amber-700 uppercase tracking-wider bg-amber-50/50">Stock Legal</th>
+                            <th className="px-4 py-3 text-right text-xs font-bold text-amber-700 uppercase tracking-wider bg-amber-50/50">Valor USD</th>
+                            <th className="px-4 py-3 text-right text-xs font-bold text-amber-700 uppercase tracking-wider bg-amber-50/50">Valor BSF</th>
+                            <th className="px-4 py-3 text-right text-xs font-bold text-amber-700 uppercase tracking-wider bg-amber-50/50">Valor COP</th>
+                          </>
                         )}
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
+                        <th className="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Acciones</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {productos.map(prod => (
-                        <tr key={prod.id_producto} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-4 py-3">
-                            <p className="text-sm font-semibold text-gray-900">{prod.nombre}</p>
-                            {prod.codigo_barra && <p className="text-xs text-gray-500 font-mono">{prod.codigo_barra}</p>}
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
-                              {prod.categoria?.nombre || '—'}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-600">{prod.unidad_medida?.abreviatura || '—'}</td>
-                          {showGeneral && (
-                            <td className="px-4 py-3">
-                              <span className={`text-sm ${getStockClass(prod.stock_general)}`}>
-                                {fmt3(prod.stock_general)} {prod.unidad_medida?.abreviatura}
-                              </span>
-                              {prod.stock_general < STOCK_BAJO && (
-                                <span className="ml-1.5 inline-flex"><AlertTriangle size={12} className="text-red-600" /></span>
-                              )}
+                    <tbody className="divide-y divide-gray-100 text-sm">
+                      {productos.map(prod => {
+                        const valorGeneral = calcularValorInventario(prod.stock_general, prod.precio_base || 0);
+                        const valorLegal = calcularValorInventario(prod.stock_legal, prod.precio_base || 0);
+                        return (
+                          <tr key={prod.id_producto} className="hover:bg-blue-50/50 transition-colors">
+                            <td className="px-4 py-4">
+                              <p className="text-sm font-semibold text-gray-900">{prod.nombre}</p>
+                              {prod.codigo_barra && <p className="text-xs text-gray-500 font-mono">{prod.codigo_barra}</p>}
                             </td>
-                          )}
-                          {showLegal && (
-                            <td className="px-4 py-3">
-                              <span className={`text-sm ${getStockClass(prod.stock_legal)}`}>
-                                {fmt3(prod.stock_legal)} {prod.unidad_medida?.abreviatura}
+                            <td className="px-4 py-4">
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
+                                {prod.categoria?.nombre || '—'}
                               </span>
                             </td>
-                          )}
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => openAjusteModal(prod)}
-                                title="Ajuste Rápido"
-                                className="p-1.5 hover:bg-gray-100 rounded-md transition-colors"
-                              >
-                                <ArrowUpDown size={14} className="text-gray-600" />
-                              </button>
-                              <button
-                                onClick={() => openProductoModal(prod)}
-                                title="Editar Producto"
-                                className="p-1.5 hover:bg-gray-100 rounded-md transition-colors"
-                              >
-                                <Edit2 size={14} className="text-gray-600" />
-                              </button>
-                              <button
-                                onClick={() => openHistorialModal(prod)}
-                                title="Ver Historial"
-                                className="p-1.5 hover:bg-gray-100 rounded-md transition-colors"
-                              >
-                                <History size={14} className="text-gray-600" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                            <td className="px-4 py-4 text-sm">
+                              <div className="font-semibold text-gray-900 mb-1">{fmtUSD(prod.precio_base)}</div>
+                              <div className="text-[10px] sm:text-xs text-gray-500 font-medium">
+                                <span className="mr-2">BSF: {tasas.ves > 0 ? fmtBSF((prod.precio_base || 0) * tasas.ves) : '—'}</span>
+                                <span className="hidden sm:inline-block">COP: {tasas.cop > 0 ? fmtCOP((prod.precio_base || 0) * tasas.cop) : '—'}</span>
+                                <div className="sm:hidden mt-0.5">COP: {tasas.cop > 0 ? fmtCOP((prod.precio_base || 0) * tasas.cop) : '—'}</div>
+                              </div>
+                            </td>
+                            {showGeneral && (
+                              <>
+                                <td className="px-4 py-4 bg-blue-50/30">
+                                  <span className={`font-semibold text-sm ${getStockClass(prod.stock_general)}`}>
+                                    {fmt3(prod.stock_general)}
+                                  </span>
+                                  {prod.stock_general < STOCK_BAJO && (
+                                    <span className="ml-1.5 inline-flex"><AlertTriangle size={12} className="text-red-600" /></span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-4 text-right bg-blue-50/30 font-semibold text-gray-900">
+                                  {fmtUSD(valorGeneral.usd)}
+                                </td>
+                                <td className="px-4 py-4 text-right bg-blue-50/30 font-semibold text-gray-900">
+                                  {tasas.ves > 0 ? fmtBSF(valorGeneral.bsf) : <span className="text-gray-400">—</span>}
+                                </td>
+                                <td className="px-4 py-4 text-right bg-blue-50/30 font-semibold text-gray-900">
+                                  {tasas.cop > 0 ? fmtCOP(valorGeneral.cop) : <span className="text-gray-400">—</span>}
+                                </td>
+                              </>
+                            )}
+                            {showLegal && (
+                              <>
+                                <td className="px-4 py-4 bg-amber-50/30">
+                                  <span className={`font-semibold text-sm ${getStockClass(prod.stock_legal)}`}>
+                                    {fmt3(prod.stock_legal)}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-4 text-right bg-amber-50/30 font-semibold text-gray-900">
+                                  {fmtUSD(valorLegal.usd)}
+                                </td>
+                                <td className="px-4 py-4 text-right bg-amber-50/30 font-semibold text-gray-900">
+                                  {tasas.ves > 0 ? fmtBSF(valorLegal.bsf) : <span className="text-gray-400">—</span>}
+                                </td>
+                                <td className="px-4 py-4 text-right bg-amber-50/30 font-semibold text-gray-900">
+                                  {tasas.cop > 0 ? fmtCOP(valorLegal.cop) : <span className="text-gray-400">—</span>}
+                                </td>
+                              </>
+                            )}
+                            <td className="px-4 py-4">
+                              <div className="flex items-center justify-center gap-1">
+                                <button
+                                  onClick={() => openAjusteModal(prod)}
+                                  title="Ajuste Rápido"
+                                  className="p-1.5 hover:bg-blue-100 rounded-lg transition-colors text-gray-600 hover:text-blue-600"
+                                >
+                                  <ArrowUpDown size={16} />
+                                </button>
+                                <button
+                                  onClick={() => openProductoModal(prod)}
+                                  title="Editar Producto"
+                                  className="p-1.5 hover:bg-blue-100 rounded-lg transition-colors text-gray-600 hover:text-blue-600"
+                                >
+                                  <Edit2 size={16} />
+                                </button>
+                                <button
+                                  onClick={() => openHistorialModal(prod)}
+                                  title="Ver Historial"
+                                  className="p-1.5 hover:bg-blue-100 rounded-lg transition-colors text-gray-600 hover:text-blue-600"
+                                >
+                                  <History size={16} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
               )}
 
               {totalPages > 1 && (
-                <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between text-sm">
-                  <p className="text-gray-500 text-xs">{productos.length} de {totalItems}</p>
-                  <div className="flex items-center gap-1">
+                <div className="px-6 py-4 border-t-2 border-gray-200 bg-gradient-to-r from-gray-50/50 to-white flex items-center justify-between">
+                  <p className="text-gray-600 text-sm font-medium">Mostrando <span className="font-bold text-gray-900">{productos.length}</span> de <span className="font-bold text-gray-900">{totalItems}</span> productos</p>
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => loadProductos(Math.max(1, currentPage - 1))}
                       disabled={currentPage === 1}
-                      className="px-2.5 py-1 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 text-xs font-medium text-gray-700"
+                      className="px-3 py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:border-blue-300 disabled:opacity-30 text-sm font-semibold text-gray-700 transition-all"
                     >
-                      Ant
+                      ← Anterior
                     </button>
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map(n => (
                       <button
                         key={n}
                         onClick={() => loadProductos(n)}
-                        className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${currentPage === n
-                          ? 'bg-blue-600 text-white'
-                          : 'border border-gray-300 hover:bg-gray-50 text-gray-700'
+                        className={`px-3 py-2 rounded-lg text-sm font-bold transition-all ${currentPage === n
+                          ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30'
+                          : 'border-2 border-gray-300 hover:border-blue-300 hover:bg-blue-50 text-gray-700'
                           }`}
                       >
                         {n}
@@ -391,9 +466,9 @@ export default function Inventario() {
                     <button
                       onClick={() => loadProductos(Math.min(totalPages, currentPage + 1))}
                       disabled={currentPage === totalPages}
-                      className="px-2.5 py-1 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-40 text-xs font-medium text-gray-700"
+                      className="px-3 py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:border-blue-300 disabled:opacity-30 text-sm font-semibold text-gray-700 transition-all"
                     >
-                      Sig
+                      Siguiente →
                     </button>
                   </div>
                 </div>

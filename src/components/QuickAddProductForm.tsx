@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Plus, Loader, AlertCircle, Package2 } from 'lucide-react';
 import { api, CategoriaProducto, UnidadMedida } from '../services/api';
 
@@ -21,16 +21,44 @@ export default function QuickAddProductForm({
 }: QuickAddProductFormProps) {
     const [isCreating, setIsCreating] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    
+    // El searchTerm ahora es el código de barras que la persona escaneó/escribió
     const [formData, setFormData] = useState({
-        nombre: searchTerm,
-        codigo_barra: '',
+        nombre: '',
+        codigo_barra: searchTerm,
         id_categoria: '' as number | '',
         id_unidad_medida: '' as number | '',
-        descripcion: ''
     });
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    // Refs para navegación de teclado
+    const nombreRef = useRef<HTMLInputElement>(null);
+    const categoriaRef = useRef<HTMLSelectElement>(null);
+    const unidadRef = useRef<HTMLSelectElement>(null);
+    const submitBtnRef = useRef<HTMLButtonElement>(null);
+
+    // Cancel on Escape
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onCancel();
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [onCancel]);
+
+    const handleEnterPress = (e: React.KeyboardEvent, nextRef: React.RefObject<HTMLElement>) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            nextRef.current?.focus();
+        }
+    };
+
+    const unidadesFiltradas = unidadesMedida.filter(u => 
+        ['kg', 'l', 'und'].includes(u.abreviatura.toLowerCase())
+    );
+
+    const handleSubmit = async (e: React.MouseEvent | React.KeyboardEvent) => {
         e.preventDefault();
+        e.stopPropagation();
         if (!formData.nombre.trim() || !formData.codigo_barra.trim()) {
             setError('Nombre y Código de Barras son obligatorios');
             return;
@@ -43,7 +71,6 @@ export default function QuickAddProductForm({
             const nuevo = await api.createProducto({
                 nombre: formData.nombre.trim(),
                 codigo_barra: formData.codigo_barra.trim(),
-                ...(formData.descripcion && { descripcion: formData.descripcion }),
                 ...(formData.id_categoria && { id_categoria: Number(formData.id_categoria) }),
                 ...(formData.id_unidad_medida && { id_unidad_medida: Number(formData.id_unidad_medida) }),
             });
@@ -58,62 +85,83 @@ export default function QuickAddProductForm({
     };
 
     return (
-        <div className="p-4 bg-gradient-to-br from-emerald-50 to-white border-t-2 border-emerald-200">
-            <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 bg-emerald-500 rounded-lg flex items-center justify-center">
-                    <Package2 size={16} className="text-white" />
+        <div className="p-6 bg-gradient-to-br from-emerald-50/50 to-white">
+            <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-emerald-200">
+                    <Package2 size={20} className="text-white" />
                 </div>
                 <div>
-                    <h5 className="text-xs font-black text-emerald-700 uppercase">Crear Producto Nuevo</h5>
-                    <p className="text-xs text-emerald-600 font-medium">Se seleccionará automáticamente</p>
+                    <h5 className="text-sm font-black text-emerald-800 uppercase tracking-tight">Crear Producto Nuevo</h5>
+                    <p className="text-[10px] text-emerald-500 font-bold uppercase">Selección automática al guardar</p>
                 </div>
             </div>
 
             {error && (
-                <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-                    <AlertCircle size={14} className="text-red-500 mt-0.5 shrink-0" />
-                    <p className="text-xs text-red-700 font-medium">{error}</p>
+                <div className="mb-4 p-3 bg-red-50 border-2 border-red-100 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+                    <AlertCircle size={16} className="text-red-500 mt-0.5 shrink-0" />
+                    <p className="text-xs text-red-700 font-bold leading-tight">{error}</p>
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-2.5">
+            <div className="space-y-4">
                 <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">
-                        Nombre <span className="text-red-500">*</span>
+                    <label className="block text-[11px] font-black text-gray-500 mb-1.5 uppercase tracking-wider ml-1">
+                        Nombre del Producto <span className="text-red-500">*</span>
                     </label>
                     <input
+                        ref={nombreRef}
                         type="text"
                         value={formData.nombre}
                         onChange={e => setFormData({ ...formData, nombre: e.target.value })}
-                        placeholder="Nombre del producto"
+                        onKeyDown={e => handleEnterPress(e, categoriaRef)}
+                        placeholder="Escriba el nombre..."
                         required
                         autoFocus
-                        className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs font-semibold"
+                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm font-bold transition-all bg-white/50 focus:bg-white"
                     />
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-3">
                     <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">
+                        <label className="block text-[11px] font-black text-gray-500 mb-1.5 uppercase tracking-wider ml-1">
                             Cód. Barra <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
                             value={formData.codigo_barra}
                             onChange={e => setFormData({ ...formData, codigo_barra: e.target.value })}
-                            placeholder="123456"
+                            placeholder="Ej: 759..."
                             required
-                            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs font-mono font-semibold"
+                            readOnly
+                            className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm font-mono font-bold bg-gray-100 text-gray-500"
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">Categoría</label>
+                        <label className="block text-[11px] font-black text-gray-500 mb-1.5 uppercase tracking-wider ml-1">Categoría</label>
                         <select
+                            ref={categoriaRef}
                             value={formData.id_categoria}
-                            onChange={e => setFormData({ ...formData, id_categoria: e.target.value ? parseInt(e.target.value) : '' })}
-                            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs font-semibold bg-white"
+                            onChange={e => {
+                                setFormData({ ...formData, id_categoria: e.target.value ? parseInt(e.target.value) : '' });
+                                if (e.target.value) {
+                                    setTimeout(() => unidadRef.current?.focus(), 50);
+                                }
+                            }}
+                            onKeyDown={e => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    try {
+                                        if ('showPicker' in HTMLSelectElement.prototype) {
+                                            (e.target as HTMLSelectElement).showPicker();
+                                        }
+                                    } catch (err) {
+                                        // Fallback si no está soportado o ya está abierto
+                                    }
+                                }
+                            }}
+                            className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm font-bold transition-all bg-white/50 focus:bg-white appearance-none cursor-pointer"
                         >
-                            <option value="">Ninguna</option>
+                            <option value="">Sin Categoría</option>
                             {categorias.map(c => (
                                 <option key={c.id_categoria} value={c.id_categoria}>{c.nombre}</option>
                             ))}
@@ -121,60 +169,68 @@ export default function QuickAddProductForm({
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                    <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">Unidad</label>
-                        <select
-                            value={formData.id_unidad_medida}
-                            onChange={e => setFormData({ ...formData, id_unidad_medida: e.target.value ? parseInt(e.target.value) : '' })}
-                            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs font-semibold bg-white"
-                        >
-                            <option value="">Ninguna</option>
-                            {unidadesMedida.map(u => (
-                                <option key={u.id_unidad_medida} value={u.id_unidad_medida}>{u.abreviatura}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">Descripción</label>
-                        <input
-                            type="text"
-                            value={formData.descripcion}
-                            onChange={e => setFormData({ ...formData, descripcion: e.target.value })}
-                            placeholder="Opcional"
-                            className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs font-semibold"
-                        />
-                    </div>
+                <div>
+                    <label className="block text-[11px] font-black text-gray-500 mb-1.5 uppercase tracking-wider ml-1">Unidad</label>
+                    <select
+                        ref={unidadRef}
+                        value={formData.id_unidad_medida}
+                        onChange={e => {
+                            setFormData({ ...formData, id_unidad_medida: e.target.value ? parseInt(e.target.value) : '' });
+                            if (e.target.value) {
+                                setTimeout(() => submitBtnRef.current?.focus(), 50);
+                            }
+                        }}
+                        onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                try {
+                                    if ('showPicker' in HTMLSelectElement.prototype) {
+                                        (e.target as HTMLSelectElement).showPicker();
+                                    }
+                                } catch (err) {
+                                    // Fallback si no está soportado o ya está abierto
+                                }
+                            }
+                        }}
+                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm font-bold transition-all bg-white/50 focus:bg-white appearance-none cursor-pointer"
+                    >
+                        <option value="">Seleccione Unidad...</option>
+                        {unidadesFiltradas.map(u => (
+                            <option key={u.id_unidad_medida} value={u.id_unidad_medida}>{u.abreviatura}</option>
+                        ))}
+                    </select>
                 </div>
 
-                <div className="flex items-center gap-2 pt-1">
+                <div className="flex items-center gap-3 pt-4">
                     <button
                         type="button"
                         onClick={onCancel}
                         disabled={isCreating}
-                        className="flex-1 px-3 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-bold text-xs transition-all disabled:opacity-50"
+                        className="flex-1 px-4 py-3 border-2 border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 font-black text-xs uppercase tracking-widest transition-all disabled:opacity-50"
                     >
                         Cancelar
                     </button>
                     <button
-                        type="submit"
+                        ref={submitBtnRef}
+                        type="button"
+                        onClick={handleSubmit}
                         disabled={isCreating || !formData.nombre.trim() || !formData.codigo_barra.trim()}
-                        className="flex-1 px-3 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg hover:shadow-lg font-bold text-xs transition-all disabled:opacity-60 flex items-center justify-center gap-1.5"
+                        className="flex-[1.5] px-4 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl hover:shadow-lg hover:shadow-emerald-500/30 font-black text-xs uppercase tracking-widest transition-all disabled:opacity-60 flex items-center justify-center gap-2"
                     >
                         {isCreating ? (
                             <>
-                                <Loader size={12} className="animate-spin" />
-                                Creando...
+                                <Loader size={14} className="animate-spin" />
+                                Guardando...
                             </>
                         ) : (
                             <>
-                                <Plus size={12} />
-                                Crear
+                                <Plus size={14} strokeWidth={3} />
+                                Guardar
                             </>
                         )}
                     </button>
                 </div>
-            </form>
+            </div>
         </div>
     );
 }

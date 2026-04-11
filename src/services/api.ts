@@ -100,6 +100,7 @@ export interface Compra {
   id_compra: number;
   id_proveedor: number;
   numero_factura?: string | null;
+  numero_control?: string | null;
   base_imponible: number;
   alicuota_iva: number;
   monto_iva: number;
@@ -114,6 +115,7 @@ export interface Compra {
 export interface CreateCompraPayload {
   id_proveedor: number;
   numero_factura?: string;
+  numero_control?: string;
   base_imponible: number;
   alicuota_iva: number;
   monto_iva: number;
@@ -440,7 +442,8 @@ class ApiService {
     limit = 20,
     numero_factura?: string,
     fecha_desde?: string,
-    fecha_hasta?: string
+    fecha_hasta?: string,
+    id_proveedor?: number | string
   ): Promise<PaginatedResponse<Compra>> {
     const query = new URLSearchParams({
       page: page.toString(),
@@ -450,6 +453,7 @@ class ApiService {
     if (numero_factura) query.append('numero_factura', numero_factura);
     if (fecha_desde) query.append('fecha_desde', fecha_desde);
     if (fecha_hasta) query.append('fecha_hasta', fecha_hasta);
+    if (id_proveedor) query.append('id_proveedor', id_proveedor.toString());
 
     const response = await fetch(`${API_URL}/compras?${query}`, {
       headers: this.getHeaders(true),

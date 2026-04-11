@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
 import { Product, MONEDA_BS, MONEDA_COP, UNIDAD_KILOGRAMOS } from '../types';
 import { api } from '../services/api';
 
@@ -13,8 +12,8 @@ export default function AddToCartModal({ product, onClose, onAdd }: AddToCartMod
   const [cantidad, setCantidad] = useState(0.250);
   const [tasas, setTasas] = useState({ ves: 36.5, cop: 3920 });
 
-  const productUnit = typeof product.unidad_medida === 'string' 
-    ? product.unidad_medida 
+  const productUnit = typeof product.unidad_medida === 'string'
+    ? product.unidad_medida
     : (product.unidad_medida as any)?.nombre;
   const isKg = productUnit === UNIDAD_KILOGRAMOS;
 
@@ -46,7 +45,7 @@ export default function AddToCartModal({ product, onClose, onAdd }: AddToCartMod
   };
 
   const fmt = (n: number) => n.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  
+
   const totalUsd = cantidad * product.precio_base;
   const totalVes = totalUsd * tasas.ves;
   const totalCop = totalUsd * tasas.cop;
@@ -59,7 +58,7 @@ export default function AddToCartModal({ product, onClose, onAdd }: AddToCartMod
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
       {/* Modal Container */}
       <div className="bg-surface-container-lowest w-full max-w-lg rounded-xl shadow-[0_24px_48px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col max-h-[90vh] scale-in-center">
-        
+
         {/* Header: Product Title & Category */}
         <div className="bg-gradient-to-br from-primary to-primary-container p-8 relative">
           <div className="absolute top-4 right-4">
@@ -86,7 +85,7 @@ export default function AddToCartModal({ product, onClose, onAdd }: AddToCartMod
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8">
-          
+
           {/* Pricing & Quantity Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
             {/* Price Indicator */}
@@ -106,21 +105,21 @@ export default function AddToCartModal({ product, onClose, onAdd }: AddToCartMod
                 Cantidad ({isKg ? 'Kg' : 'Unid'})
               </label>
               <div className="flex items-center bg-surface-container-low rounded-xl p-1 group transition-all border border-outline-variant/30 focus-within:ring-2 focus-within:ring-primary/20">
-                <button 
+                <button
                   onClick={() => updateQuantity(cantidad - (isKg ? 0.05 : 1))}
                   className="w-10 h-10 flex items-center justify-center text-secondary hover:text-primary hover:bg-surface-container-highest rounded-lg transition-colors active:scale-90"
                 >
                   <span className="material-symbols-outlined">remove</span>
                 </button>
-                <input 
+                <input
                   className="flex-1 bg-transparent border-none text-center font-headline font-bold text-lg text-on-surface focus:ring-0 w-full"
-                  type="number" 
+                  type="number"
                   step={isKg ? "0.050" : "1"}
                   value={cantidad}
                   onChange={(e) => setCantidad(parseFloat(e.target.value) || 0)}
                   placeholder="0.000"
                 />
-                <button 
+                <button
                   onClick={() => updateQuantity(cantidad + (isKg ? 0.05 : 1))}
                   className="w-10 h-10 flex items-center justify-center text-secondary hover:text-primary hover:bg-surface-container-highest rounded-lg transition-colors active:scale-90"
                 >
@@ -163,7 +162,7 @@ export default function AddToCartModal({ product, onClose, onAdd }: AddToCartMod
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
-            <button 
+            <button
               onClick={handleAdd}
               disabled={cantidad <= 0}
               className="flex-1 order-1 sm:order-2 h-14 bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-xl font-headline font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
@@ -171,7 +170,7 @@ export default function AddToCartModal({ product, onClose, onAdd }: AddToCartMod
               <span className="material-symbols-outlined">shopping_cart</span>
               Agregar Producto
             </button>
-            <button 
+            <button
               onClick={onClose}
               className="px-8 order-2 sm:order-1 h-14 bg-surface-container-high text-on-surface rounded-xl font-headline font-semibold hover:bg-surface-container-highest active:scale-95 transition-all"
             >

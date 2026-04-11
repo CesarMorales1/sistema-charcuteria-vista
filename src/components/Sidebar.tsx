@@ -1,5 +1,5 @@
 import { useAuth } from '../context/AuthContext';
-import { Package2, LogOut, Users, ShoppingCart, Building2, FileText, TrendingUp, Package, LayoutDashboard, Key, ShoppingBag } from 'lucide-react';
+import { Package2, LogOut, Users, ShoppingCart, Building2, FileText, TrendingUp, Package, LayoutDashboard, Key, ShoppingBag, BarChart3 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function Sidebar() {
@@ -18,6 +18,7 @@ export default function Sidebar() {
     { name: 'Compras', icon: ShoppingCart, path: '/compras', requiresAdmin: false },
     { name: 'Inventario', icon: Package, path: '/inventario', requiresAdmin: false },
     { name: 'Tasas de Cambio', icon: TrendingUp, path: '/tasas', requiresAdmin: false },
+    { name: 'Rentabilidad', icon: BarChart3, path: '/rentabilidad', requiresAdmin: false },
     { name: 'Cuentas por Pagar', icon: FileText, path: '/facturas', requiresAdmin: false },
   ];
 

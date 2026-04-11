@@ -14,6 +14,7 @@ import Ventas from './pages/Ventas';
 import Pos from './pages/Pos';
 import Tasas from './pages/Tasas';
 import InitialInventory from './pages/InitialInventory';
+import Rentabilidad from './pages/Rentabilidad';
 
 function App() {
   return (
@@ -107,6 +108,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <InitialInventory />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/rentabilidad"
+            element={
+              <ProtectedRoute>
+                <Rentabilidad />
               </ProtectedRoute>
             }
           />

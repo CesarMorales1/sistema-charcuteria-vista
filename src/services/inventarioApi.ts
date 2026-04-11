@@ -24,6 +24,7 @@ export interface ProductoInventario {
   id_unidad_medida: number;
   unidad_medida?: UnidadMedida | null;
   peso_unitario?: number | null;
+  precio_base?: number; // Added since it's used for inventory value
   activo: boolean;
   stock_general: number;
   stock_legal: number;
